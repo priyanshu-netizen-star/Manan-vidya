@@ -84,5 +84,41 @@ report(`Admissions assistant answers in Hindi [${s}s]`, r.json?.lang === "hi" &&
 [r, s] = await timed(() => anon.post("/api/assistant", { question: "What is the fee for class 5?", lang: "en" }));
 report(`Fee question is still escalated to staff, not answered by AI [${s}s]`, r.json?.mode === "escalated", r.json?.answer);
 
+// ─── AI features across every module ───
+const office = await as("office");
+const warden = await as("warden");
+const mgmt = await as("management");
+const isAi = (r) => r.status < 300 && r.json?.mode === "ai";
+const show = (r, key = "text") => r.json?.[key] ?? r.json?.answer ?? r.text;
+
+[r, s] = await timed(() => student.post("/api/ai/copilot", { messages: [{ role: "user", content: "What should I revise this week?" }] }));
+report(`Copilot (student) [${s}s]`, isAi(r), show(r, "answer"));
+[r, s] = await timed(() => mgmt.post("/api/ai/copilot", { messages: [{ role: "user", content: "Give me today's school overview" }] }));
+report(`Copilot (management) [${s}s]`, isAi(r), show(r, "answer"));
+[r, s] = await timed(() => warden.post("/api/ai/briefing", {}));
+report(`Warden AI briefing [${s}s]`, isAi(r), show(r));
+for (const mode of ["simplify", "notes", "quiz"]) {
+  [r, s] = await timed(() => student.post("/api/ai/study", { topicId: 4, mode, messages: [] }));
+  report(`Study assistant: ${mode} [${s}s]`, isAi(r), show(r, "answer"));
+}
+[r, s] = await timed(() => student.post("/api/ai/study", { topicId: 4, mode: "flashcards", messages: [] }));
+report(`Study assistant: flashcards [${s}s]`, isAi(r) && r.json.cards?.length > 0, JSON.stringify(r.json?.cards?.slice(0, 3) ?? r.text));
+[r, s] = await timed(() => teacher.post("/api/ai/explain", { questionId: 1, chosen: 0 }));
+report(`Explain a quiz answer [${s}s]`, isAi(r), show(r));
+[r, s] = await timed(() => student.post("/api/ai/code-help", { slug: "py-greeting", code: 'school = ""\nprint("Hello, " + school + "!")', result: 'FAIL: Expected the output "Hello, Manan Vidya!", got "Hello, !"' }));
+report(`AI coding tutor (must not give the full answer) [${s}s]`, isAi(r), show(r));
+[r, s] = await timed(() => teacher.post("/api/ai/material", { topicId: 4, focus: "examples from daily life" }));
+report(`AI material draft saved as draft [${s}s]`, r.status === 201 && r.json?.id, r.text);
+[r, s] = await timed(() => teacher.post("/api/ai/insights", {}));
+report(`Class insights [${s}s]`, isAi(r), show(r));
+[r, s] = await timed(() => teacher.post("/api/ai/remark", { studentId: 25, examId: 5 }));
+report(`Report-card remark draft [${s}s]`, isAi(r), show(r));
+[r, s] = await timed(() => office.post("/api/ai/enquiry-reply", { enquiryId: 1 }));
+report(`Enquiry reply draft [${s}s]`, isAi(r), show(r));
+[r, s] = await timed(() => office.post("/api/ai/ask-data", { question: "How did the latest exams go in each subject?" }));
+report(`Ask your data → ${r.json?.report} [${s}s]`, isAi(r) && r.json.report === "exam-results", show(r, "summary"));
+[r, s] = await timed(() => warden.post("/api/ai/triage", { description: "Water is leaking from the bathroom pipe and the floor is flooding" }));
+report(`Maintenance triage → ${r.json?.category}/${r.json?.priority} [${s}s]`, isAi(r) && r.json.category === "plumbing", r.json?.reason ?? r.text);
+
 console.log(`\n${failed ? `${failed} check(s) failed` : "All live AI checks passed"}. Read the answers above for quality.`);
 process.exit(failed ? 1 : 0);

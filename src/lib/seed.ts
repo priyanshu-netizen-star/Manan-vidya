@@ -371,5 +371,5 @@ export async function wipeDatabase(q: Queryable) {
   await q.query(`TRUNCATE audit_log, coding_progress, coding_challenges, coding_lessons, projects, status_history, maintenance_requests,
     hostel_attendance, leave_requests, bed_allocations, hostel_beds, hostel_rooms, assistant_logs, enquiries, kb_entries, tasks, marks, exams,
     attendance, learning_events, lesson_plans, worksheets, quiz_attempts, quiz_questions, quizzes, questions, materials, topics,
-    teaching_assignments, subjects, sessions, users, students, classes RESTART IDENTITY CASCADE`);
+    teaching_assignments, subjects, sessions, users, students, classes, report_remarks RESTART IDENTITY CASCADE`);
 }

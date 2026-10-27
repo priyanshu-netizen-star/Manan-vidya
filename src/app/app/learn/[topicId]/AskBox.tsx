@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { Sparkles, BookText, ShieldAlert } from "lucide-react";
+import Link from "next/link";
 import { api } from "@/components/forms";
+import { renderMarkdown } from "@/components/Markdown";
 
 type Answer = { mode: "ai" | "materials" | "safety"; answer: string; notice?: string; sources: { title: string; text: string }[] };
 
@@ -49,6 +51,9 @@ export function AskBox({ topicId, aiEnabled }: { topicId: number; aiEnabled: boo
             : "AI is not switched on for this deployment. You will see the matching parts of the approved material."}{" "}
           Never type personal details.
         </p>
+        <Link href={`/app/study?topic=${topicId}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand">
+          <Sparkles className="w-3.5 h-3.5" aria-hidden /> Open the AI study assistant: notes, flashcards and practice
+        </Link>
       </form>
       {error && <p role="alert" className="mt-3 text-sm text-bad">{error}</p>}
       {res && (
@@ -60,9 +65,9 @@ export function AskBox({ topicId, aiEnabled }: { topicId: number; aiEnabled: boo
             </div>
           )}
           {res.mode === "ai" && (
-            <div className="rounded-lg border border-brand/25 bg-brand/5 p-3">
+            <div className="ai-card p-3">
               <p className="text-xs font-semibold text-brand flex items-center gap-1 mb-1"><Sparkles className="w-3.5 h-3.5" aria-hidden /> AI explanation</p>
-              <p className="text-sm whitespace-pre-wrap">{res.answer}</p>
+              <div className="prose-school text-sm" dangerouslySetInnerHTML={{ __html: renderMarkdown(res.answer) }} />
             </div>
           )}
           {res.notice && <p className="text-xs text-muted">{res.notice}</p>}

@@ -342,3 +342,23 @@ Shows environment, database type, AI status and a readiness checklist (productio
 
 ### H4. Presentation data reset
 Restores the synthetic records; available only in the presentation environment to the platform administrator. Implemented and tested.
+
+## H. AI across every module
+
+Every feature below is implemented and covered by automated tests in its non-AI mode, and was checked live with Google Gemini on 27 October 2026 using synthetic data. Each result is labelled "AI generated" or "Automatic (not AI)". Details of inputs, outputs and safeguards are in the AI approach document (07).
+
+| ID | Feature | Users | Purpose | Human control |
+|---|---|---|---|---|
+| H1 | AI Copilot on every page | All roles | Answers "what needs my attention?" and "how do I…?" from the user's own data and the user guide | Never decides; child-safety screening first |
+| H2 | Daily, executive and hostel briefings | All roles | A prioritised summary of live facts with the page to use | Facts always shown alongside |
+| H3 | AI study assistant | Students, teachers | Explanations, worked examples, revision notes, flashcards and practice questions from approved material | Practice only; nothing is marked |
+| H4 | Explain my mistake | Students | Personal explanation of a wrong quiz answer | Only after submission |
+| H5 | AI coding tutor | Students | Hints for Python, JavaScript, HTML and robot challenges | Never gives the solution |
+| H6 | AI learning-material drafts | Teachers | First drafts of topic material | Teacher approval required |
+| H7 | Class insights | Teachers, management | Likely misconceptions and what to re-teach | Advice only |
+| H8 | Report-card remarks | Teachers | Draft remark from grades and attendance | Teacher edits and approves; families see approved only |
+| H9 | Admissions reply drafts | Office, management | Draft reply from verified facts | Staff send it themselves |
+| H10 | Ask your data | Office, management | Plain-English questions answered from the standard reports | Standard reports only |
+| H11 | Maintenance triage | Warden, boarders | Suggested category and priority | Person filing decides |
+| H12 | Search and command palette (Ctrl+K) | All roles | Jump to pages; find students, enquiries, tasks, topics and lessons the role may open; send a question to the Copilot | Results limited by role |
+

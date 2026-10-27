@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { BedDouble, DoorOpen, Users, Wrench } from "lucide-react";
+import { Briefing } from "@/components/ai/Briefing";
 import { BarList } from "@/components/charts";
 import { Card, EmptyState, PageHeader, SampleDataTag, Stat, StatusBadge } from "@/components/ui";
 import { requireAnyPermission } from "@/lib/auth";
-import { isPresentation } from "@/lib/config";
+import { aiConfigured, isPresentation } from "@/lib/config";
+import { hostelFacts } from "@/lib/insights";
 import { getDb } from "@/lib/db";
 import { fmtDate, fmtDateTime } from "@/lib/dates";
 import { hostelSummary } from "@/lib/queries";
@@ -33,15 +36,17 @@ export default async function HostelOverview() {
   const unallocated = await db.one<{ n: number }>(
     "SELECT count(*)::int AS n FROM students s WHERE s.is_boarder AND s.status = 'active' AND NOT EXISTS (SELECT 1 FROM bed_allocations ba WHERE ba.student_id = s.id AND ba.to_date IS NULL)",
   );
+  const facts = await hostelFacts();
   return (
     <div>
       <PageHeader eyebrow="Hostel" title="Hostel overview" description="Who is in the hostel, who is out, and what needs attention." actions={isPresentation() ? <SampleDataTag /> : undefined} />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Boarders" value={h?.boarders ?? 0} sub={unallocated?.n ? `${unallocated.n} without a bed` : "All have a bed"} tone={unallocated?.n ? "bad" : undefined} />
-        <Stat label="Beds occupied" value={`${h?.occupied ?? 0} / ${h?.beds ?? 0}`} />
-        <Stat label="Requests awaiting warden" value={h?.pending ?? 0} tone={h?.pending ? "bad" : undefined} />
-        <Stat label="Open maintenance" value={h?.open_maintenance ?? 0} />
+        <Stat icon={<Users />} label="Boarders" value={h?.boarders ?? 0} sub={unallocated?.n ? `${unallocated.n} without a bed` : "All have a bed"} tone={unallocated?.n ? "bad" : undefined} />
+        <Stat icon={<BedDouble />} label="Beds occupied" value={`${h?.occupied ?? 0} / ${h?.beds ?? 0}`} />
+        <Stat icon={<DoorOpen />} label="Requests awaiting warden" value={h?.pending ?? 0} tone={h?.pending ? "bad" : undefined} />
+        <Stat icon={<Wrench />} tone="warn" label="Open maintenance" value={h?.open_maintenance ?? 0} />
       </div>
+      <div className="mt-5"><Briefing facts={facts} aiEnabled={aiConfigured()} title="Hostel briefing" scope="hostel" /></div>
       <div className="grid lg:grid-cols-2 gap-5 mt-5">
         <Card title="Occupancy by block">
           <BarList title="Beds occupied by block" valueLabel="Occupied" data={blocks.map((b) => ({ label: b.block, value: b.occupied, display: `${b.occupied} / ${b.beds}` }))} max={Math.max(...blocks.map((b) => b.beds), 1)} />

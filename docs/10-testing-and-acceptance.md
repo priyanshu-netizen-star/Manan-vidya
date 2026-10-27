@@ -19,12 +19,13 @@ The end-to-end suite starts the production server on a fresh in-memory database 
 | TypeScript and ESLint | clean | 0 |
 | Unit and database tests | 47 | 0 |
 | End-to-end: A. Routing and subpath | 19 | 0 |
-| End-to-end: B. Page access by role (7 roles) | 115 | 0 |
+| End-to-end: B. Page access by role (7 roles) | 121 | 0 |
 | End-to-end: C. Security boundaries | 29 | 0 |
 | End-to-end: D. User journeys and workflows | 93 | 0 |
+| End-to-end: D10. AI features without an AI key (fallbacks and access control) | 40 | 0 |
 | End-to-end: E1. Browser user journeys (Chrome) | 15 | 0 |
 | End-to-end: E2. Responsive layout at 375, 768 and 1366 px | 47 | 0 |
-| **End-to-end total** | **318** | **0** |
+| **End-to-end total** | **364** | **0** |
 
 Issues found by these tests during development and fixed before this run included: a horizontal overflow on the proposal header at tablet width; wide tables stretching cards on phones (11 pages); an invalid phone-number pattern rejected by modern browsers; and a server/client component boundary error on three forms.
 
@@ -37,7 +38,13 @@ Issues found by these tests during development and fixed before this run include
 
 ### Live AI check with Google Gemini (27 October 2026)
 
-Run with a Gemini free-tier key, `gemini-2.5-flash`, sample data on a throwaway database: **10 passed, 0 failed.**
+The latest run, after the AI features were extended to every module, gave **25 passed, 0 failed**. It added the Copilot, briefings, the four study-assistant modes, explain-my-mistake, the coding tutor, material drafts, class insights, remark drafts, enquiry reply drafts, ask-your-data and maintenance triage. Reading the answers found and fixed four problems:
+- AI pointed to pages that do not exist or that the role cannot open. It now receives the role's exact menu names.
+- The coding tutor wrote out the missing value. It now must point to the line and ask a guiding question instead.
+- Remarks used a gendered pronoun guessed from the name. They now use the first name only.
+- Answers repeated the school's name unnecessarily.
+
+The first run, of the original four AI features, gave **10 passed, 0 failed**. It used a Gemini free-tier key, `gemini-2.5-flash`, and sample data on a throwaway database.
 
 | Check | Result |
 |---|---|
@@ -102,6 +109,15 @@ Against `https://manan-vidya.vercel.app/mananvidyademo` with Neon Postgres:
 - The teacher publishes the quiz, and a published quiz cannot be edited.
 - The student sees the quiz and scores 2/2, and the teacher sees that result.
 - Draft material is invisible to students until it is approved.
+
+**AI features across modules (AI off):**
+- Every feature returns a labelled automatic result.
+- Material drafting refuses rather than faking.
+- Explain-my-mistake is locked until the quiz is submitted.
+- Students cannot reach staff AI tools or other classes' topics.
+- Parents cannot see draft remarks; an approved remark appears on their report card.
+- Search never returns student records to students.
+- AI use appears in the audit log.
 
 **AI honesty:**
 - With no AI key, the learning assistant returns approved passages with a "not configured" notice.

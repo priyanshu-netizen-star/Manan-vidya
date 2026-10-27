@@ -17,8 +17,8 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
   const status = STATUSES.includes(sp.status as never) ? sp.status! : "draft";
   const topics = await manageableTopics(user);
   const db = await getDb();
-  const rows = await db.query<{ id: number; title: string; status: string; topic: string; subject: string; class_level: number; author: string | null; updated_at: string; approver: string | null }>(
-    `SELECT m.id, m.title, m.status, t.name AS topic, s.name AS subject, t.class_level, u.name AS author, m.updated_at, a.name AS approver
+  const rows = await db.query<{ id: number; title: string; status: string; source: string; topic: string; subject: string; class_level: number; author: string | null; updated_at: string; approver: string | null }>(
+    `SELECT m.id, m.title, m.status, m.source, t.name AS topic, s.name AS subject, t.class_level, u.name AS author, m.updated_at, a.name AS approver
        FROM materials m JOIN topics t ON t.id = m.topic_id JOIN subjects s ON s.id = t.subject_id
        LEFT JOIN users u ON u.id = m.created_by LEFT JOIN users a ON a.id = m.approved_by
       WHERE m.status = $1 AND m.topic_id = ANY($2::int[]) ORDER BY m.updated_at DESC`,
@@ -52,6 +52,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
                     <tr key={r.id}>
                       <td>
                         <Link href={`/app/teacher/content/${r.id}`} className="font-semibold text-brand">{r.title}</Link>
+                        {r.source === "ai_draft" && <span className="ai-chip ml-2 align-middle" title="Drafted by AI. Check every fact before approving.">AI draft</span>}
                         <p className="text-xs text-muted">{r.author ?? "—"} · {fmtDate(r.updated_at)}{r.approver ? ` · approved by ${r.approver}` : ""}</p>
                       </td>
                       <td className="text-sm">{r.topic}<p className="text-xs text-muted">{r.subject} · Class {levelName(r.class_level)}</p></td>
@@ -73,6 +74,21 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
           )}
         </Card>
         {canEdit && (
+          <div className="space-y-5">
+          {can(user.role, "ai.teacher_tools") && (
+            <section className="ai-card p-5">
+              <h2 className="font-bold text-[0.9rem] flex items-center gap-2"><span className="ai-chip">AI</span> Draft material with AI</h2>
+              <p className="text-sm text-ink-2 mt-1">AI writes a CBSE-style draft that builds on the topic&apos;s approved material. It is saved as a draft: check every fact, edit, then approve.</p>
+              <JsonForm endpoint="/api/ai/material" submitLabel="Draft with AI" successMessage="Draft created. Open it to review." className="space-y-3 mt-3" redirectTo="/app/teacher/content/{id}">
+                <Field label="Topic" htmlFor="ai-m-topic">
+                  <select id="ai-m-topic" name="topicId" className="select" required>
+                    {topics.map((t) => <option key={t.id} value={t.id}>Class {levelName(t.class_level)} · {t.subject} · {t.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Focus (optional)" htmlFor="ai-m-focus"><input id="ai-m-focus" name="focus" className="input" maxLength={300} placeholder="e.g. real-life examples from Jharkhand" /></Field>
+              </JsonForm>
+            </section>
+          )}
           <Card title="Write new material">
             <JsonForm endpoint="/api/materials" submitLabel="Save as draft" successMessage="Saved as draft. Approve it to publish to students." resetOnSuccess>
               <Field label="Topic" htmlFor="m-topic">
@@ -86,6 +102,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
               </Field>
             </JsonForm>
           </Card>
+          </div>
         )}
       </div>
     </div>

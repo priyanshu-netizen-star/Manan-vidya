@@ -39,12 +39,12 @@ const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 const GEMINI_BLOCKED = new Set(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII", "RECITATION", "IMAGE_SAFETY"]);
 
 /** Google Gemini via its REST API (no extra dependency). Returns the answer text, or JSON text when a schema is given. */
-async function geminiGenerate(opts: { system: string; prompt: string; maxTokens: number; jsonSchema?: object }): Promise<string> {
+async function geminiGenerate(opts: { system: string; messages: ChatMessage[]; maxTokens: number; jsonSchema?: object }): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new AiUnavailable("not_configured", "The AI service has not been configured for this deployment.");
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: opts.system }] },
-    contents: [{ role: "user", parts: [{ text: opts.prompt }] }],
+    contents: opts.messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
     generationConfig: {
       maxOutputTokens: opts.maxTokens,
       ...(opts.jsonSchema ? { responseMimeType: "application/json", responseJsonSchema: opts.jsonSchema } : {}),
@@ -98,16 +98,34 @@ async function geminiGenerate(opts: { system: string; prompt: string; maxTokens:
     .join("");
 }
 
-async function complete(opts: {
+export type ChatMessage = { role: "user" | "assistant"; content: string };
+
+/** Keeps a conversation valid for every provider: starts with the user, alternates roles, bounded length. */
+export function normaliseConversation(messages: ChatMessage[], maxTurns = 12): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  for (const m of messages.slice(-maxTurns)) {
+    const content = m.content.trim().slice(0, 4000);
+    if (!content) continue;
+    if (out.length && out[out.length - 1].role === m.role) out[out.length - 1] = { role: m.role, content: `${out[out.length - 1].content}\n\n${content}` };
+    else out.push({ role: m.role, content });
+  }
+  while (out.length && out[0].role !== "user") out.shift();
+  return out;
+}
+
+/** One model call with a (possibly multi-turn) conversation. Counts against the caller's hourly AI quota. */
+export async function generate(opts: {
   userKey: string;
   system: string;
-  prompt: string;
+  messages: ChatMessage[];
   effort: "low" | "medium" | "high";
   maxTokens?: number;
 }): Promise<string> {
   checkQuota(opts.userKey);
+  const messages = normaliseConversation(opts.messages);
+  if (!messages.length || messages[messages.length - 1].role !== "user") throw new AiUnavailable("provider_error", "There is no question to answer.");
   if (aiProvider() === "gemini") {
-    const text = await geminiGenerate({ system: opts.system, prompt: opts.prompt, maxTokens: opts.maxTokens ?? 4000 });
+    const text = await geminiGenerate({ system: opts.system, messages, maxTokens: opts.maxTokens ?? 4000 });
     if (!text.trim()) throw new AiUnavailable("provider_error", "The AI service returned an empty answer.");
     return text.trim();
   }
@@ -120,7 +138,7 @@ async function complete(opts: {
       fallbacks: "default",
       output_config: { effort: opts.effort },
       system: opts.system,
-      messages: [{ role: "user", content: opts.prompt }],
+      messages,
     });
     if (res.stop_reason === "refusal") {
       throw new AiUnavailable("refused", "The AI service declined this request. Please rephrase it or ask a teacher.");
@@ -131,6 +149,48 @@ async function complete(opts: {
       .trim();
     if (!text) throw new AiUnavailable("provider_error", "The AI service returned an empty answer.");
     return text;
+  } catch (e) {
+    throw toUnavailable(e);
+  }
+}
+
+async function complete(opts: { userKey: string; system: string; prompt: string; effort: "low" | "medium" | "high"; maxTokens?: number }) {
+  return generate({ ...opts, messages: [{ role: "user", content: opts.prompt }] });
+}
+
+/** Structured output validated against a Zod schema, for either provider. */
+export async function generateJson<T extends z.ZodType>(
+  schema: T,
+  opts: { userKey: string; system: string; prompt: string; effort: "low" | "medium" | "high"; maxTokens?: number },
+): Promise<z.infer<T>> {
+  checkQuota(opts.userKey);
+  if (aiProvider() === "gemini") {
+    const text = await geminiGenerate({
+      system: opts.system,
+      messages: [{ role: "user", content: opts.prompt }],
+      maxTokens: opts.maxTokens ?? 4000,
+      jsonSchema: z.toJSONSchema(schema),
+    });
+    try {
+      return schema.parse(JSON.parse(text));
+    } catch {
+      throw new AiUnavailable("provider_error", "The AI service returned an unreadable answer.");
+    }
+  }
+  const anthropic = getClient();
+  try {
+    const res = await anthropic.beta.messages.parse({
+      model: aiModel(),
+      max_tokens: opts.maxTokens ?? 4000,
+      betas: [FALLBACK_BETA],
+      fallbacks: "default",
+      output_config: { effort: opts.effort, format: betaZodOutputFormat(schema) },
+      system: opts.system,
+      messages: [{ role: "user", content: opts.prompt }],
+    });
+    if (res.stop_reason === "refusal") throw new AiUnavailable("refused", "The AI service declined this request.");
+    if (res.parsed_output == null) throw new AiUnavailable("provider_error", "The AI service returned an unreadable answer.");
+    return res.parsed_output as z.infer<T>;
   } catch (e) {
     throw toUnavailable(e);
   }
@@ -151,10 +211,10 @@ function toUnavailable(e: unknown): AiUnavailable {
   return new AiUnavailable("provider_error", "The AI service is temporarily unavailable.");
 }
 
-const SCHOOL_CONTEXT = `You work inside VoxVision School OS, a school software platform proposed for ${SCHOOL.name}, a CBSE co-educational residential school in ${SCHOOL.city}, India.
-VoxVision is the software vendor, not the school: when you refer to the school, call it "${SCHOOL.name}" or "the school". Mention the school or VoxVision only when the answer needs it.`;
+export const SCHOOL_CONTEXT = `You work inside VoxVision School OS, a school software platform proposed for ${SCHOOL.name}, a CBSE co-educational residential school in ${SCHOOL.city}, India.
+VoxVision is the software vendor, not the school: when you refer to the school, call it "${SCHOOL.name}" or "the school". Do not mention the school's name or VoxVision unless the user asks about them: the user already knows where they are.`;
 
-function formatPassages(passages: Passage[]) {
+export function formatPassages(passages: Passage[]) {
   return passages.map((p, i) => `<source id="${i + 1}" title="${p.title}">\n${p.text}\n</source>`).join("\n");
 }
 
@@ -227,41 +287,17 @@ export async function draftQuestions(input: {
   difficulty: "easy" | "medium" | "hard" | "mixed";
   passages: Passage[];
 }): Promise<DraftQuestion[]> {
-  checkQuota(input.userKey);
-  const system = `${SCHOOL_CONTEXT}
+  const parsed = await generateJson(DraftQuestions, {
+    userKey: input.userKey,
+    effort: "medium",
+    maxTokens: 8000,
+    system: `${SCHOOL_CONTEXT}
 You draft multiple-choice questions for teacher review. Every question must be answerable from the approved material provided.
-Each question has exactly 4 options, one unambiguously correct answer (correct_index is 0-based), and an explanation a student can learn from.`;
-  const prompt = `Draft ${input.count} multiple-choice questions for Class ${input.classLevel} ${input.subject}, topic "${input.topic}", difficulty: ${input.difficulty}.
+Each question has exactly 4 options, one unambiguously correct answer (correct_index is 0-based), and an explanation a student can learn from.`,
+    prompt: `Draft ${input.count} multiple-choice questions for Class ${input.classLevel} ${input.subject}, topic "${input.topic}", difficulty: ${input.difficulty}.
 Approved material:
-${formatPassages(input.passages) || "(none)"}`;
-
-  let parsed: z.infer<typeof DraftQuestions> | null = null;
-  if (aiProvider() === "gemini") {
-    const text = await geminiGenerate({ system, prompt, maxTokens: 8000, jsonSchema: z.toJSONSchema(DraftQuestions) });
-    try {
-      parsed = DraftQuestions.parse(JSON.parse(text));
-    } catch {
-      throw new AiUnavailable("provider_error", "The AI service returned an unreadable draft.");
-    }
-  } else {
-    const anthropic = getClient();
-    try {
-      const res = await anthropic.beta.messages.parse({
-        model: aiModel(),
-        max_tokens: 8000,
-        betas: [FALLBACK_BETA],
-        fallbacks: "default",
-        output_config: { effort: "medium", format: betaZodOutputFormat(DraftQuestions) },
-        system,
-        messages: [{ role: "user", content: prompt }],
-      });
-      if (res.stop_reason === "refusal") throw new AiUnavailable("refused", "The AI service declined this request.");
-      parsed = res.parsed_output;
-    } catch (e) {
-      throw toUnavailable(e);
-    }
-  }
-  if (!parsed) throw new AiUnavailable("provider_error", "The AI service returned an unreadable draft.");
+${formatPassages(input.passages) || "(none)"}`,
+  });
   // Defensive validation: drop anything that is not a well-formed 4-option question.
   return parsed.questions
     .filter((q) => q.options.length === 4 && q.correct_index >= 0 && q.correct_index < 4 && q.prompt.trim())

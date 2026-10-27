@@ -6,6 +6,13 @@ Short, task-based guides for each group of users. The application works in any m
 
 ---
 
+## Everyone: AI Copilot, search and theme
+
+- **AI Copilot.** Press **AI Copilot** (bottom right) or **Ask AI** (top bar) and type a question such as "What needs my attention today?" or "How do I request an outpass?". It answers from your own information and this guide, and shows links to the right pages. It never makes decisions for you.
+- **Search.** Press **Ctrl K** (or the search box at the top) to jump to any page, find a student, enquiry, topic or lesson you are allowed to see, or send the question to the Copilot.
+- **Briefing.** Your dashboard lists what needs attention today. Press **AI briefing** for a short written summary.
+- **Theme.** The sun/moon button switches between light, dark and your device's setting.
+
 ## 1. Students
 
 ### Study a topic
@@ -19,10 +26,16 @@ Short, task-based guides for each group of users. The application works in any m
 4. Never type your phone number, address or other personal details.
 5. If something is worrying you, talk to a teacher, your class teacher, the warden or a parent. You can also call **CHILDLINE 1098**.
 
+### AI study assistant
+
+Open **AI study assistant**, choose a topic, then choose what you want: **Ask anything**, **Explain simply**, **Step by step**, **Revision notes**, **Flashcards** (press a card to see the answer) or **Quiz me** (practice questions, not marked). It uses only your teacher's approved material. Never type personal details.
+
 ### Take a quiz
 1. On the topic page, tap **Start** next to a quiz (or **Retake** to try again).
 2. Choose one answer for each question, then tap **Submit answers**.
 3. You see your score straight away. Read the explanation under each question you got wrong.
+
+After submitting a quiz, press **Explain my mistake** under any question you got wrong.
 
 ### Check your progress
 Open **Progress**. Each topic shows your best score and a band: Not started, Needs support (below 50%), Developing (50–79%) or Secure (80% and above).
@@ -33,6 +46,8 @@ Open **Progress**. Each topic shows your best score and a band: Not started, Nee
    - **Python / JavaScript / HTML:** write your code and tap **Run and check**. Green ticks mean a check passed. Tap **Hint** if you are stuck, **Reset** to start again. The first Python run takes a little longer while Python loads.
    - **Robot:** write commands such as `forward 2`, `left`, `right`, `repeat 3 { forward }` and tap **Run robot**. Reach the star without hitting a wall.
    - **AI literacy:** answer the questions and tap **Check answers**.
+
+In any code or robot challenge, press **Ask the AI tutor** for a hint. It will point you to the problem but will not give you the answer.
 
 ### Hostel (boarders)
 - **Maintenance:** report a problem in your room (category, description, priority).
@@ -71,6 +86,8 @@ Open the **Admissions help** page (no sign-in needed). Ask questions in English 
 2. Open the item to check the preview, then **Approve for students**.
 3. Editing approved material sends it back to draft, so approve it again after checking.
 
+**Draft with AI:** on **Learning material**, choose a topic and press **Draft with AI**. The draft is marked "AI draft". Check every fact, edit, then approve.
+
 ### Build the question bank
 1. **Question bank** → **Write a question**: the question, four options (select the correct one), an explanation students will see after the quiz, and difficulty → **Save as draft**.
 2. **Approve** each question after checking it.
@@ -93,6 +110,8 @@ Open the **Admissions help** page (no sign-in needed). Ask questions in English 
 ### Class performance
 **Class performance** shows each topic's average score (lowest first) and students below 50% on any topic. Use **View as table** for exact numbers. Treat these as a prompt for conversation: one quiz is a small sample.
 
+Press **Find misconceptions and what to re-teach** for an AI summary of which wrong answers students chose most often and what to re-teach.
+
 ### Attendance
 **Attendance** → choose class and date → **Open register**. Everyone starts as **P** (present); tap **A** (absent), **L** (late) or **E** (excused) for exceptions → **Save register**. You can correct a saved register by saving again.
 
@@ -101,6 +120,8 @@ Open the **Admissions help** page (no sign-in needed). Ask questions in English 
 
 ---
 
+**Report-card remarks:** open a student's report card, press **Suggest a remark**, edit it, then **Save draft** or **Approve remark**. Families see only approved remarks.
+
 ## 4. Office and admissions staff
 
 ### Daily enquiry routine
@@ -108,6 +129,8 @@ Open the **Admissions help** page (no sign-in needed). Ask questions in English 
 2. Open an enquiry. Escalated enquiries show why the assistant did not answer (for example a fee question). Contact the parent personally.
 3. Update the status (**Contacted**, **Visit / interaction scheduled**, **Application submitted**, **Admitted** (note required), or **Closed**), set the next **Follow-up** date, assign an **Owner**, and add notes. Everything appears on the timeline.
 4. When an escalation has been answered, use **Mark escalation handled** with a short note.
+
+On an enquiry, press **Draft reply** for a suggested message in the parent's language. Copy it, edit it and send it yourself; nothing is sent automatically.
 
 ### Keep the assistant's answers correct
 1. Open **Assistant knowledge base**. Each entry shows its verification status.
@@ -130,6 +153,8 @@ Open the **Admissions help** page (no sign-in needed). Ask questions in English 
 - **Tasks**: create tasks for yourself or colleagues, update status, and note what is blocking a task.
 
 ---
+
+**Ask your data:** at the top of **Reports**, type a question such as "Which students have low attendance?". The answer names the report it used; open the full report from there. **Explain this report** summarises the report on screen.
 
 ## 5. Hostel wardens
 
@@ -156,6 +181,8 @@ Open the **Admissions help** page (no sign-in needed). Ask questions in English 
 - Use the **Class** and **Period** filters at the top. Key figures: attendance, enquiries needing action, average practice-quiz score, hostel status.
 - Charts: attendance trend, enquiries by status, lowest-scoring topics, tasks with overdue items. Hover for values; **View as table** for exact figures.
 - **Search records** finds students, enquiries and tasks.
+
+The **Executive briefing** and **Ask your data** panels at the top of the command centre summarise the day and answer questions from the standard reports.
 
 ### Oversight
 - **Enquiries**, **Reports**, **Class performance**, **Hostel overview** and **Tasks → All tasks** give detail behind the dashboard.

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AiAction } from "@/components/ai/AiBits";
 import { JsonForm } from "@/components/forms";
 import { Badge, Card, Field, Notice, PageHeader, StatusBadge } from "@/components/ui";
 import { requirePageUser } from "@/lib/auth";
@@ -61,6 +62,17 @@ export default async function EnquiryDetail({ params }: { params: Promise<{ id: 
             </dl>
             {e.message && <p className="mt-4 text-sm rounded-lg bg-surface-2 p-3 whitespace-pre-wrap">{e.message}</p>}
           </Card>
+          <section className="ai-card p-5">
+            <h2 className="font-bold text-[0.9rem] flex items-center gap-2"><span className="ai-chip">AI</span> Draft a reply to the parent</h2>
+            <AiAction
+              className="mt-2"
+              endpoint="/api/ai/enquiry-reply"
+              body={{ enquiryId: e.id }}
+              label={`Draft reply in ${e.language === "hi" ? "Hindi" : "English"}`}
+              busyLabel="Drafting"
+              description="Uses only the verified school facts in the assistant's knowledge base. Nothing is sent: copy the draft, edit it, and send it yourself by phone message or email. Fees, seats and decisions are always left for the office to confirm."
+            />
+          </section>
           <Card title="Timeline">
             <ol className="border-l-2 border-line pl-4 space-y-3">
               {history.map((h, i) => (

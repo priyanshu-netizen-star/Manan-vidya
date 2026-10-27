@@ -17,9 +17,15 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0a0a0f" };
 
+const THEME_SCRIPT = `try{var t=localStorage.getItem("mv-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${space.variable}`}>
+    <html lang="en" className={`${inter.variable} ${space.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Applies the viewer's saved theme before first paint (light, dark or follow the system). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-screen">{children}</body>
     </html>
   );

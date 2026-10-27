@@ -133,13 +133,13 @@ try {
   // ─── B. Page access by role ───────────────────────────────────────────────
   console.log("\nB. Page access by role");
   const PAGES = {
-    student: { ok: ["/app", "/app/learn", "/app/learn/1", "/app/quiz/1", "/app/progress", "/app/coding", "/app/coding/py-hello", "/app/coding/robot-moves", "/app/hostel/leave", "/app/hostel/maintenance"], no: ["/app/teacher", "/app/enquiries", "/app/students", "/app/command", "/app/users", "/app/hostel/rooms", "/app/attendance"] },
-    parent: { ok: ["/app", "/app/progress", "/app/report-cards", "/app/hostel/leave"], no: ["/app/learn", "/app/teacher", "/app/students", "/app/enquiries", "/app/command", "/app/hostel/rollcall"] },
-    teacher: { ok: ["/app", "/app/teacher", "/app/teacher/content", "/app/teacher/content/1", "/app/teacher/questions", "/app/teacher/questions/1", "/app/teacher/quizzes", "/app/teacher/quizzes/1", "/app/teacher/worksheets", "/app/teacher/lessons", "/app/teacher/performance", "/app/learn", "/app/attendance", "/app/exams", "/app/exams/5", "/app/students", "/app/students/25", "/app/report-cards", "/app/report-cards/25?exam=5", "/app/worksheet/1", "/app/tasks", "/app/coding"], no: ["/app/enquiries", "/app/command", "/app/users", "/app/hostel/rooms", "/app/knowledge"] },
-    office: { ok: ["/app", "/app/enquiries", "/app/enquiries/1", "/app/knowledge", "/app/students", "/app/students/1", "/app/attendance", "/app/exams", "/app/report-cards", "/app/reports", "/app/reports?r=attendance-30d", "/app/reports?r=exam-results", "/app/reports?r=low-attendance", "/app/reports?r=enquiry-pipeline", "/app/reports?r=quiz-participation", "/app/tasks", "/app/hostel"], no: ["/app/teacher", "/app/command", "/app/users", "/app/hostel/rollcall", "/app/learn"] },
+    student: { ok: ["/app", "/app/study", "/app/study?topic=4", "/app/learn", "/app/learn/1", "/app/quiz/1", "/app/progress", "/app/coding", "/app/coding/py-hello", "/app/coding/robot-moves", "/app/hostel/leave", "/app/hostel/maintenance"], no: ["/app/teacher", "/app/enquiries", "/app/students", "/app/command", "/app/users", "/app/hostel/rooms", "/app/attendance"] },
+    parent: { ok: ["/app", "/app/progress", "/app/report-cards", "/app/hostel/leave"], no: ["/app/study", "/app/learn", "/app/teacher", "/app/students", "/app/enquiries", "/app/command", "/app/hostel/rollcall"] },
+    teacher: { ok: ["/app", "/app/teacher", "/app/teacher/content", "/app/teacher/content/1", "/app/teacher/questions", "/app/teacher/questions/1", "/app/teacher/quizzes", "/app/teacher/quizzes/1", "/app/teacher/worksheets", "/app/teacher/lessons", "/app/teacher/performance", "/app/learn", "/app/attendance", "/app/exams", "/app/exams/5", "/app/students", "/app/students/25", "/app/report-cards", "/app/report-cards/25?exam=5", "/app/worksheet/1", "/app/tasks", "/app/coding", "/app/study"], no: ["/app/enquiries", "/app/command", "/app/users", "/app/hostel/rooms", "/app/knowledge"] },
+    office: { ok: ["/app", "/app/enquiries", "/app/enquiries/1", "/app/knowledge", "/app/students", "/app/students/1", "/app/attendance", "/app/exams", "/app/report-cards", "/app/reports", "/app/reports?r=attendance-30d", "/app/reports?r=exam-results", "/app/reports?r=low-attendance", "/app/reports?r=enquiry-pipeline", "/app/reports?r=quiz-participation", "/app/tasks", "/app/hostel"], no: ["/app/teacher", "/app/command", "/app/users", "/app/hostel/rollcall", "/app/learn", "/app/study"] },
     warden: { ok: ["/app", "/app/hostel", "/app/hostel/leave", "/app/hostel/rollcall", "/app/hostel/rooms", "/app/hostel/maintenance", "/app/students", "/app/tasks"], no: ["/app/teacher", "/app/enquiries", "/app/command", "/app/exams"] },
     management: { ok: ["/app", "/app/command", "/app/command?days=30&classId=3", "/app/command?q=Aarav", "/app/enquiries", "/app/reports", "/app/teacher/performance", "/app/teacher/content", "/app/teacher/questions", "/app/hostel", "/app/audit", "/app/tasks?view=all", "/app/report-cards"], no: ["/app/users", "/app/hostel/rollcall", "/app/learn"] },
-    admin: { ok: ["/app", "/app/users", "/app/audit", "/app/system", "/app/command", "/app/teacher", "/app/hostel/rooms", "/app/knowledge"], no: [] },
+    admin: { ok: ["/app", "/app/study", "/app/users", "/app/audit", "/app/system", "/app/command", "/app/teacher", "/app/hostel/rooms", "/app/knowledge"], no: [] },
   };
   for (const [role, { ok, no }] of Object.entries(PAGES)) {
     const c = await as(role);
@@ -386,6 +386,90 @@ try {
   for (let i = 0; i < 5; i++) await lock.post("/api/auth/login", { email: "warden@school-os.example", password: "bad-password" });
   const locked = await lock.post("/api/auth/login", { email: "warden@school-os.example", password: "Presentation@2026" });
   check("account locks after 5 failed sign-ins", locked.status === 401 && /locked/i.test(locked.json?.error), locked.text);
+
+  // ─── D10. AI features (AI deliberately not configured: honest fallbacks and access control) ──────
+  console.log("\nD10. AI features without an AI key");
+  {
+    const st = await as("student"), te = await as("teacher"), of = await as("office"), wa = await as("warden"), pa = await as("parent"), mg = await as("management");
+    const auto = (r) => r.status === 200 && r.json?.mode === "automatic";
+
+    const cp = await st.post("/api/ai/copilot", { messages: [{ role: "user", content: "What should I revise this week?" }] });
+    check("Copilot answers from the student's own facts, labelled automatic", auto(cp) && /not switched on/i.test(cp.json.notice) && /You are in Class/.test(cp.json.answer), cp.text);
+    const cps = await st.post("/api/ai/copilot", { messages: [{ role: "user", content: "I am being bullied in the hostel" }] });
+    check("Copilot routes a wellbeing message to the safety response", cps.json?.mode === "safety" && cps.json.answer.includes("1098"));
+    const cpo = await of.post("/api/ai/copilot", { messages: [{ role: "user", content: "How do I keep the assistant's answers correct?" }] });
+    check("Copilot answers 'how do I' from the user guide", auto(cpo) && /user guide/i.test(cpo.json.answer), cpo.text);
+    check("Copilot requires sign-in", (await fresh().post("/api/ai/copilot", { messages: [{ role: "user", content: "hi" }] })).status === 401);
+    const br = await wa.post("/api/ai/briefing", {});
+    check("warden briefing lists live hostel facts (automatic)", auto(br) && /leave|beds|roll-call/i.test(br.json.text), br.text);
+    const brh = await mg.post("/api/ai/briefing", { scope: "hostel" });
+    check("management can request the hostel briefing", auto(brh) && /beds/.test(brh.json.text));
+
+    const notes = await st.post("/api/ai/study", { topicId: 4, mode: "notes", messages: [] });
+    check("study assistant: revision notes from approved material", auto(notes) && /approved material/i.test(notes.json.answer), notes.text);
+    const cards = await st.post("/api/ai/study", { topicId: 4, mode: "flashcards", messages: [] });
+    check("study assistant: flashcards fall back to the approved question bank", auto(cards) && cards.json.cards.length > 0 && !!cards.json.cards[0].front && !!cards.json.cards[0].back, cards.text);
+    const qm = await st.post("/api/ai/study", { topicId: 4, mode: "quiz", messages: [] });
+    check("study assistant: 'quiz me' gives an approved practice question", auto(qm) && /question bank/i.test(qm.json.answer));
+    const chat = await st.post("/api/ai/study", { topicId: 4, mode: "chat", messages: [{ role: "user", content: "Why do school bags have wide straps?" }] });
+    check("study assistant: chat answers from approved passages", auto(chat) && /straps/i.test(chat.json.answer), chat.text);
+    check("study assistant: wellbeing message gets the safety response", (await st.post("/api/ai/study", { topicId: 4, mode: "chat", messages: [{ role: "user", content: "I want to hurt myself" }] })).json?.mode === "safety");
+    check("study assistant: another class's topic is refused", (await st.post("/api/ai/study", { topicId: 9, mode: "notes", messages: [] })).status === 403);
+    check("study assistant: parents cannot use it", (await pa.post("/api/ai/study", { topicId: 4, mode: "notes", messages: [] })).status === 403);
+
+    const fresh4 = await te.post("/api/questions", { topicId: 4, prompt: "Which of these increases pressure? (AI e2e)", options: ["Larger area", "Smaller area", "Less force", "Wider straps"], correctIndex: "1", explanation: "Pressure is force per unit area.", difficulty: "easy" });
+    await te.patch(`/api/questions/${fresh4.json.id}`, { action: "approve" });
+    check("explain-my-mistake is refused before the student has submitted that question", (await st.post("/api/ai/explain", { questionId: fresh4.json.id, chosen: 0 })).status === 403);
+    const ex = await st.post("/api/ai/explain", { questionId: uniqueQ[3], chosen: (key[3] + 1) % 4 });
+    check("explain-my-mistake after submitting: correct answer and explanation (automatic)", auto(ex) && /Correct answer/.test(ex.json.text), ex.text);
+
+    const ch = await st.post("/api/ai/code-help", { slug: "py-greeting", code: "print(1)", result: "FAIL: Expected the output" });
+    check("AI coding tutor falls back to the teacher's hint", auto(ch) && /hint/i.test(ch.json.text), ch.text);
+    check("coding lesson page offers the AI tutor", (await st.get("/app/coding/py-hello")).text.includes("Ask the AI tutor"));
+
+    const md = await te.post("/api/ai/material", { topicId: 4, focus: "" });
+    check("AI material drafting reports AI is unavailable (no fake draft)", md.status === 503 && /not been configured/i.test(md.json?.error), md.text);
+    check("students cannot draft material", (await st.post("/api/ai/material", { topicId: 4 })).status === 403);
+    const ins = await te.post("/api/ai/insights", {});
+    check("class insights: automatic analysis of quiz answers", auto(ins) && /average/i.test(ins.json.text), ins.text);
+    check("students cannot request class insights", (await st.post("/api/ai/insights", {})).status === 403);
+
+    const rd = await te.post("/api/ai/remark", { studentId: 25, examId: 5 });
+    check("report-card remark: template draft for the teacher (automatic)", auto(rd) && rd.json.text.length > 20, rd.text);
+    check("warden cannot draft report-card remarks", (await wa.post("/api/ai/remark", { studentId: 25, examId: 5 })).status === 403);
+    check("parent cannot draft or save remarks", (await pa.post("/api/ai/remark", { studentId: 25, examId: 5 })).status === 403 && (await pa.req("PUT", "/api/report-remarks", { studentId: 25, examId: 5, remark: "Parent wrote this" })).status === 403);
+    check("teacher saves a draft remark", (await te.req("PUT", "/api/report-remarks", { studentId: 25, examId: 5, remark: "E2E draft remark: steady progress." })).json?.status === "draft");
+    check("a draft remark is hidden from the family", !(await pa.get("/app/report-cards/25?exam=5")).text.includes("E2E draft remark"));
+    check("teacher approves the remark", (await te.req("PUT", "/api/report-remarks", { studentId: 25, examId: 5, remark: "E2E approved remark: steady progress.", approve: true })).json?.status === "approved");
+    check("the approved remark appears on the family's report card", (await pa.get("/app/report-cards/25?exam=5")).text.includes("E2E approved remark"));
+
+    const er = await of.post("/api/ai/enquiry-reply", { enquiryId: 1 });
+    check("enquiry reply draft for staff (template, automatic)", auto(er) && /Admissions Office|प्रवेश कार्यालय/.test(er.json.text), er.text);
+    check("teachers cannot draft enquiry replies", (await te.post("/api/ai/enquiry-reply", { enquiryId: 1 })).status === 403);
+
+    const ad = await of.post("/api/ai/ask-data", { question: "Which students have low attendance?" });
+    check("ask-your-data routes to the low-attendance report and summarises it", auto(ad) && ad.json.report === "low-attendance" && Array.isArray(ad.json.rows), ad.text);
+    const ad2 = await mg.post("/api/ai/ask-data", { report: "exam-results" });
+    check("explain-this-report summarises the chosen report", auto(ad2) && ad2.json.report === "exam-results" && ad2.json.summary.length > 10);
+    check("students cannot ask the data", (await st.post("/api/ai/ask-data", { question: "attendance" })).status === 403);
+
+    const tr = await wa.post("/api/ai/triage", { description: "Sparks coming from the switch socket near bed 3" });
+    check("maintenance triage suggests electrical / urgent (automatic)", auto(tr) && tr.json.category === "electrical" && tr.json.priority === "urgent", tr.text);
+    check("office staff cannot use maintenance triage", (await of.post("/api/ai/triage", { description: "Leaking tap in room" })).status === 403);
+
+    const so = await of.get("/api/search?q=Aarav");
+    check("search finds a student for office staff", so.status === 200 && so.json.results.some((r) => r.kind === "Student"), so.text);
+    const ss = await st.get("/api/search?q=Aarav");
+    check("search never returns student records to a student", ss.status === 200 && !ss.json.results.some((r) => r.kind === "Student"));
+    const sp = await st.get("/api/search?q=Pressure");
+    check("search finds topics for students", sp.json.results.some((r) => r.kind === "Topic"), sp.text);
+
+    const ad3 = await as("admin");
+    const sys = await ad3.get("/app/system");
+    check("System page lists AI features with usage counts", sys.text.includes("AI features") && sys.text.includes("Ask your data"));
+    const aud = await ad3.get("/app/audit");
+    check("AI use is recorded in the audit log", aud.text.includes("ai.copilot") || aud.text.includes("ai.study"));
+  }
 
   // ─── E. Browser ───────────────────────────────────────────────────────────
   if (!process.argv.includes("--no-browser")) {

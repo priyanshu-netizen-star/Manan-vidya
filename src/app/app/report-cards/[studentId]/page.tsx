@@ -6,6 +6,8 @@ import { SCHOOL, isPresentation } from "@/lib/config";
 import { getDb } from "@/lib/db";
 import { addDays, fmtDate } from "@/lib/dates";
 import { gradeFor } from "@/lib/grades";
+import { can } from "@/lib/rbac";
+import { RemarkEditor } from "./RemarkEditor";
 
 export const metadata = { title: "Report card" };
 
@@ -41,6 +43,16 @@ export default async function ReportCard({ params, searchParams }: { params: Pro
     "SELECT count(*)::int AS days, count(*) FILTER (WHERE status IN ('present','late'))::int AS present FROM attendance WHERE student_id = $1 AND date >= $2 AND ($3::date IS NULL OR date <= $3)",
     [s.id, attFrom, exam.held_on],
   );
+
+  const remark = await db.one<{ remark: string; status: "draft" | "approved" }>(
+    "SELECT remark, status FROM report_remarks WHERE exam_id = $1 AND student_id = $2",
+    [exam.id, s.id],
+  );
+  const staffCanWrite = (can(user.role, "exams.manage") || can(user.role, "marks.enter")) && (user.role !== "teacher" || !!(await db.one<{ ok: boolean }>(
+    "SELECT EXISTS (SELECT 1 FROM teaching_assignments WHERE teacher_id = $1 AND class_id = $2) AS ok",
+    [user.id, s.class_id],
+  ))?.ok);
+  const shownRemark = remark && (remark.status === "approved" || !scope) ? remark : null;
 
   return (
     <div className="max-w-3xl mx-auto card p-6 sm:p-10 print-area">
@@ -87,6 +99,13 @@ export default async function ReportCard({ params, searchParams }: { params: Pro
       <p className="mt-3 text-[0.7rem] text-muted">
         Grade scale (default, to be confirmed by the school): A1 91–100, A2 81–90, B1 71–80, B2 61–70, C1 51–60, C2 41–50, D 33–40, E below 33.
       </p>
+      {shownRemark && (
+        <div className="mt-6 border border-line rounded-lg p-4">
+          <p className="text-xs text-muted">Class teacher&apos;s remark{shownRemark.status === "draft" ? " (draft: not visible to the family)" : ""}</p>
+          <p className="mt-1 text-sm">{shownRemark.remark}</p>
+        </div>
+      )}
+      {staffCanWrite && <RemarkEditor studentId={s.id} examId={exam.id} initial={remark?.remark ?? ""} status={remark?.status ?? null} />}
       <div className="grid grid-cols-3 gap-6 mt-14 text-xs text-center">
         <div className="border-t border-ink pt-1">Class teacher</div>
         <div className="border-t border-ink pt-1">Principal</div>

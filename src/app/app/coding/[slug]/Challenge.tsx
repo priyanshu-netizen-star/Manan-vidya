@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AiAction } from "@/components/ai/AiBits";
 import { CheckCircle2, Play, RotateCcw, XCircle } from "lucide-react";
 import { api } from "@/components/forms";
 import { findGoal, runRobot, type RobotSpec, type RobotState } from "@/lib/robot";
@@ -179,6 +180,14 @@ export function CodeChallenge({ c }: { c: ChallengeData }) {
           <Result lines={res.lines} output={res.output} />
         </>
       )}
+      <AiAction
+        className="mt-4"
+        variant="secondary"
+        endpoint="/api/ai/code-help"
+        body={{ slug: c.slug, code, result: res ? [...res.lines.map((l) => `${l.pass ? "PASS" : "FAIL"}: ${l.text}`), res.output ? `Output: ${res.output}` : ""].join("\n") : "" }}
+        label="Ask the AI tutor"
+        busyLabel="Looking at your code"
+      />
       {c.kind === "html" && (
         <div className="mt-4">
           <p className="label">Preview</p>
@@ -186,7 +195,7 @@ export function CodeChallenge({ c }: { c: ChallengeData }) {
           <iframe title="Page preview" sandbox="" srcDoc={code} className="w-full h-56 rounded-lg border border-line bg-white" />
         </div>
       )}
-      {c.kind === "python" && <p className="hint mt-2">Python runs in your browser using Pyodide (loaded from cdn.jsdelivr.net). Your code is not sent to the server.</p>}
+      {c.kind === "python" && <p className="hint mt-2">Python runs in your browser using Pyodide (loaded from cdn.jsdelivr.net). Your code is sent to the server only if you ask the AI tutor.</p>}
     </div>
   );
 }
@@ -300,6 +309,14 @@ export function RobotChallenge({ c }: { c: ChallengeData }) {
         </div>
         {showHint && <p className="mt-2 text-sm rounded-lg bg-brand/5 border border-brand/20 p-2.5">{c.hint}</p>}
         {msg && <Result lines={[msg]} />}
+        <AiAction
+          className="mt-4"
+          variant="secondary"
+          endpoint="/api/ai/code-help"
+          body={{ slug: c.slug, code, result: msg ? `${msg.pass ? "PASS" : "FAIL"}: ${msg.text}` : "" }}
+          label="Ask the AI tutor"
+          busyLabel="Looking at your program"
+        />
       </div>
     </div>
   );

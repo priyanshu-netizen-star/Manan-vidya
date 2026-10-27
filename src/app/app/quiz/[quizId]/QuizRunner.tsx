@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { api } from "@/components/forms";
+import { AiAction } from "@/components/ai/AiBits";
 
 type Q = { id: number; prompt: string; options: string[] };
 type Result = {
@@ -91,6 +92,9 @@ export function QuizRunner({ quizId, questions, topicId }: { quizId: number; que
                   <p className="font-semibold">{r.isCorrect ? "Correct" : r.chosen === null ? "Not answered" : "Not quite"}</p>
                   {!r.isCorrect && <p className="mt-1">Correct answer: <strong>{q.options[r.correctIndex]}</strong></p>}
                   <p className="mt-1 text-ink-2">{result?.explanations[q.id]}</p>
+                  {!r.isCorrect && result?.saved && (
+                    <AiAction className="mt-3" endpoint="/api/ai/explain" body={{ questionId: q.id, chosen: r.chosen }} label="Explain my mistake" busyLabel="Explaining" />
+                  )}
                 </div>
               )}
             </li>

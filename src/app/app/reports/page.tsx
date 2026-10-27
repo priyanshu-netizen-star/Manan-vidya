@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Download } from "lucide-react";
+import { AskData } from "@/components/ai/AskData";
 import { Card, EmptyState, PageHeader, SampleDataTag } from "@/components/ui";
 import { requirePageUser } from "@/lib/auth";
 import { isPresentation, withBase } from "@/lib/config";
@@ -15,6 +16,10 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   return (
     <div>
       <PageHeader eyebrow="Administration" title="Reports" description="Standard administrative reports. Every report can be downloaded as a spreadsheet (CSV)." actions={isPresentation() ? <SampleDataTag /> : undefined} />
+      <section className="ai-card p-5 mb-5">
+        <h2 className="font-bold text-[0.9rem] flex items-center gap-2 mb-3"><span className="ai-chip">AI</span> Ask your data</h2>
+        <AskData />
+      </section>
       <div className="grid lg:grid-cols-[16rem_1fr] gap-5 items-start">
         <Card pad={false}>
           <ul className="p-2">
@@ -31,6 +36,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
           pad={false}
         >
           <p className="px-5 pb-3 text-sm text-muted">{report.description}</p>
+          <div className="px-5 pb-4"><AskData key={name} report={name} /></div>
           {report.rows.length ? (
             <div className="table-wrap">
               <table className="table">

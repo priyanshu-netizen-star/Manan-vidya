@@ -17,8 +17,19 @@
 | Lesson preparation | Teacher | Topic, class, length, focus; up to 6 passages of approved material | Draft lesson plan in Markdown | Saved as draft; teacher edits and marks *Reviewed* |
 | Question drafting | Teacher | Topic, class, count, difficulty; approved material | Multiple-choice questions (4 options, answer, explanation, difficulty) | Each saved as draft marked "AI draft"; teacher approves individually |
 | Admissions rewording | Parent (public) | Parent's question; matching verified knowledge-base entries | Conversational rewording, under 120 words | Must not add facts; sources and verification status always shown |
+| AI Copilot (every page) | Every signed-in role | The user's question and recent turns; short "live facts" built only from data that role may see; matching user-guide sections; the role's menu names | Short answer, pointing only to pages the user can open | Labelled; never decides; child-safety screening first for students and parents |
+| Daily briefing | Every role (dashboard); executive briefing (command centre); hostel briefing | The same role-scoped live facts | 3–5 prioritised bullets with the page to use | The facts are always shown alongside; generated only on request |
+| AI study assistant | Student, teacher | Mode (ask, explain simply, step by step, revision notes, flashcards, quiz me); conversation; up to 10 passages of the topic's approved material | Explanation, notes, flashcards or one practice question | Approved material only; practice questions are never marked; safety screening first |
+| Explain my mistake | Student (after submitting) | The question, options, the student's choice, the correct answer, the teacher's explanation, approved passages | Short explanation and a memory tip | Available only after the student has submitted a quiz containing the question |
+| AI coding tutor | Student | Challenge task, teacher's hint, the student's code, the result of the checks | A hint and a guiding question | Must never write the corrected code or the missing value |
+| Learning-material drafts | Teacher | Topic, class, focus; existing approved material | Draft material (title and Markdown) | Saved as draft marked "AI draft"; teacher checks facts and approves |
+| Class insights | Teacher, management | Per-question results and most common wrong answers for the lowest-scoring topics | Likely misconceptions and what to re-teach | Advice to the teacher only; never labels students |
+| Report-card remark drafts | Teacher (classes they teach), exam managers | Subject percentages and grades, attendance percentage, first name | 2–3 sentence draft remark | Teacher edits and approves; families see only approved remarks |
+| Admissions reply drafts | Office, management | Enquiry details, staff notes, verified knowledge-base facts | Draft reply in the parent's language | Never sent automatically; fees, seats and decisions left to the office |
+| Ask your data | Office, management | The question, then the rows of one standard report | Which report answers it, and a plain-English explanation | Routes only to the standard reports (no free-form database queries); the report runs with the user's own permissions |
+| Maintenance triage | Warden, boarders | The problem description | Suggested category and priority, with a reason | Suggestion only; the person filing decides |
 
-AI is **not** used for: marking quizzes, deciding admissions, approving leave, attendance, report cards, or any welfare matter.
+AI is **not** used for: marking quizzes, deciding admissions, approving leave, recording attendance, entering marks or grades, or any welfare matter. Every AI result is labelled "AI generated"; every fallback is labelled "Automatic (not AI)".
 
 ## How it works without AI
 
@@ -28,6 +39,17 @@ AI is **not** used for: marking quizzes, deciding admissions, approving leave, a
 | Lesson preparation | Builds a structured template (objectives, timed sequence, differentiation, exit questions with answers from the question bank, homework), labelled "Template from approved material". |
 | Question drafting | Reports "The AI service has not been configured for this deployment" and creates nothing. |
 | Admissions assistant | Answers with the verified knowledge-base text (this is also the safest mode). |
+| AI Copilot | Shows the matching user-guide section and the user's live facts. |
+| Briefings | List the live facts, attention items first. |
+| Study assistant | Shows approved passages; flashcards and "quiz me" use the approved question bank. |
+| Explain my mistake | Shows the correct answer, the teacher's explanation and a passage of approved material. |
+| Coding tutor | Shows the teacher's hint and general debugging tips. |
+| Material drafting | Reports that AI is unavailable and creates nothing. |
+| Class insights | Lists the weakest questions with the most common wrong answer. |
+| Report-card remarks | Suggests a template remark from the grades. |
+| Admissions reply | Suggests a template reply. |
+| Ask your data | Chooses the report by keywords and gives its highest and lowest figures. |
+| Maintenance triage | Suggests category and priority from keywords. |
 
 ## Model and configuration
 
@@ -71,6 +93,10 @@ AI drafts questions ──────┴─▶ draft ──▶ approve (one by 
 - Fees, deadlines, hostel charges and transport routes are not on the website, so the assistant passes those questions to staff.
 - Hindi text was drafted by VoxVision and must be reviewed by a fluent staff member before go-live (`hindi_reviewed`).
 - Staff see every question the assistant could not answer, so they can add approved answers.
+
+## Usage logging
+
+Each AI use is recorded in the audit log as `ai.<feature>` with the mode ("ai" or "automatic"), the user and the time, never the message content. The **System and AI status** page shows 30-day usage per feature.
 
 ## Data sent to the AI provider
 

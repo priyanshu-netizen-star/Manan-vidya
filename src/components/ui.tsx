@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
-import { Info } from "lucide-react";
+import { Inbox, Info } from "lucide-react";
 
 export function PageHeader({ title, description, actions, eyebrow }: { title: string; description?: ReactNode; actions?: ReactNode; eyebrow?: string }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
       <div className="min-w-0">
-        {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-brand mb-1">{eyebrow}</p>}
-        <h1 className="text-2xl font-bold font-display text-ink">{title}</h1>
-        {description && <div className="mt-1 text-sm text-ink-2 max-w-3xl">{description}</div>}
+        {eyebrow && (
+          <p className="inline-flex items-center gap-1.5 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-brand mb-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[#6c5ce7] to-[#00cec9]" aria-hidden />
+            {eyebrow}
+          </p>
+        )}
+        <h1 className="text-[1.65rem] leading-tight font-bold font-display text-ink tracking-tight">{title}</h1>
+        {description && <div className="mt-1.5 text-sm text-ink-2 max-w-3xl">{description}</div>}
       </div>
       {actions && <div className="flex flex-wrap gap-2 shrink-0">{actions}</div>}
     </div>
@@ -19,7 +24,7 @@ export function Card({ title, actions, children, className = "", pad = true }: {
     <section className={`card ${className}`}>
       {(title || actions) && (
         <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-1">
-          {title && <h2 className="text-sm font-bold text-ink">{title}</h2>}
+          {title && <h2 className="text-[0.9rem] font-bold text-ink tracking-tight">{title}</h2>}
           {actions}
         </div>
       )}
@@ -50,6 +55,7 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
 export function EmptyState({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="text-center py-10 px-4">
+      <span className="mx-auto mb-3 icon-tile bg-surface-2 text-muted" aria-hidden><Inbox className="w-5 h-5" /></span>
       <p className="font-semibold text-ink">{title}</p>
       {children && <div className="text-sm text-muted mt-1 max-w-md mx-auto">{children}</div>}
       {action && <div className="mt-4">{action}</div>}
@@ -57,11 +63,23 @@ export function EmptyState({ title, children, action }: { title: string; childre
   );
 }
 
-export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: Tone }) {
+const STAT_ACCENT: Record<Tone, string> = {
+  default: "linear-gradient(135deg, #6c5ce7, #8b7ff2)",
+  brand: "linear-gradient(135deg, #6c5ce7, #00a8a4)",
+  good: "linear-gradient(135deg, #0ca30c, #1baf7a)",
+  warn: "linear-gradient(135deg, #e09b00, #f2b632)",
+  bad: "linear-gradient(135deg, #d03b3b, #e8685b)",
+};
+
+/** Key figure tile. `icon` is an optional lucide icon element; `tone` colours the value and the icon tile. */
+export function Stat({ label, value, sub, tone, icon }: { label: string; value: ReactNode; sub?: ReactNode; tone?: Tone; icon?: ReactNode }) {
   return (
-    <div className="card card-pad">
-      <p className="text-xs font-semibold text-muted uppercase tracking-wide">{label}</p>
-      <p className={`mt-1 text-2xl font-bold font-display ${tone === "bad" ? "text-bad" : tone === "good" ? "text-good" : "text-ink"}`}>{value}</p>
+    <div className="card card-pad card-hover relative overflow-hidden">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[0.7rem] font-bold text-muted uppercase tracking-[0.08em]">{label}</p>
+        {icon && <span className="icon-tile !w-9 !h-9 text-white [&>svg]:w-4 [&>svg]:h-4" style={{ background: STAT_ACCENT[tone ?? "default"] }} aria-hidden>{icon}</span>}
+      </div>
+      <p className={`mt-1.5 text-[1.7rem] leading-tight font-bold font-display tabular-nums ${tone === "bad" ? "text-bad" : tone === "good" ? "text-good" : "text-ink"}`}>{value}</p>
       {sub && <p className="text-xs text-muted mt-1">{sub}</p>}
     </div>
   );

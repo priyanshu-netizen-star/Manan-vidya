@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { fmtDateTime } from "@/lib/dates";
 import { can } from "@/lib/rbac";
 import { MAINT_FLOW, MAINT_LABEL, type MaintStatus } from "@/lib/workflows";
+import { TriageButton } from "./TriageButton";
 
 export const metadata = { title: "Maintenance" };
 
@@ -65,10 +66,11 @@ export default async function MaintenancePage() {
               ) : (
                 <p className="text-sm">Room <strong>{ownRoom?.room_no}</strong></p>
               )}
+              <Field label="What is the problem?" htmlFor="mr-desc"><textarea id="mr-desc" name="description" className="textarea" rows={3} required minLength={5} /></Field>
+              <TriageButton />
               <Field label="Category" htmlFor="mr-cat">
                 <select id="mr-cat" name="category" className="select">{["electrical", "plumbing", "furniture", "cleaning", "other"].map((c) => <option key={c} value={c}>{c}</option>)}</select>
               </Field>
-              <Field label="What is the problem?" htmlFor="mr-desc"><textarea id="mr-desc" name="description" className="textarea" rows={3} required minLength={5} /></Field>
               <Field label="Priority" htmlFor="mr-pri"><select id="mr-pri" name="priority" className="select" defaultValue="normal"><option value="low">Low</option><option value="normal">Normal</option><option value="urgent">Urgent (safety risk)</option></select></Field>
             </JsonForm>
           )}

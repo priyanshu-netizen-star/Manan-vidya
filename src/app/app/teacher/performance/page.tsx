@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AiAction } from "@/components/ai/AiBits";
 import { BarList } from "@/components/charts";
 import { Card, EmptyState, PageHeader, SampleDataTag, StatusBadge } from "@/components/ui";
 import { requirePageUser } from "@/lib/auth";
@@ -45,6 +46,17 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
       </form>
       {rows.length ? (
         <div className="grid lg:grid-cols-2 gap-5">
+          <section className="ai-card p-5 lg:col-span-2">
+            <h2 className="font-bold text-[0.9rem] flex items-center gap-2"><span className="ai-chip">AI</span> Class insights</h2>
+            <AiAction
+              className="mt-2"
+              endpoint="/api/ai/insights"
+              body={classId ? { classId } : {}}
+              label="Find misconceptions and what to re-teach"
+              busyLabel="Analysing quiz answers"
+              description="Looks at which questions students got wrong, and which wrong answer they chose most often, to suggest likely misconceptions and next teaching steps. Advice for you only: it never labels students."
+            />
+          </section>
           <Card title="Average score by topic (lowest first)">
             <BarList
               title="Average quiz score by topic"

@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { CalendarCheck, ClipboardCheck, Inbox, Search, Sparkles, Building2 } from "lucide-react";
+import { AskData } from "@/components/ai/AskData";
+import { Briefing } from "@/components/ai/Briefing";
 import { BarList, TrendChart } from "@/components/charts";
 import { Card, EmptyState, PageHeader, SampleDataTag, Stat } from "@/components/ui";
 import { requirePageUser } from "@/lib/auth";
-import { isPresentation } from "@/lib/config";
+import { aiConfigured, isPresentation } from "@/lib/config";
+import { roleFacts } from "@/lib/insights";
 import { getDb } from "@/lib/db";
 import { fmtDate, todayIST } from "@/lib/dates";
 import { attendanceTrend, classesList, enquiryAttention, enquiryCounts, hostelSummary, taskCounts, topicPerformance } from "@/lib/queries";
@@ -14,7 +17,7 @@ export const metadata = { title: "Command centre" };
 const RANGES = [7, 14, 30] as const;
 
 export default async function CommandCentre({ searchParams }: { searchParams: Promise<{ classId?: string; days?: string; q?: string }> }) {
-  await requirePageUser("command.view");
+  const user = await requirePageUser("command.view");
   const sp = await searchParams;
   const classes = await classesList();
   const classId = classes.some((c) => c.id === Number(sp.classId)) ? Number(sp.classId) : null;
@@ -48,6 +51,7 @@ export default async function CommandCentre({ searchParams }: { searchParams: Pr
       )
     : [];
 
+  const facts = await roleFacts(user);
   const latest = trend.at(-1);
   const avgAtt = trend.length ? Math.round(trend.reduce((n, t) => n + t.percent, 0) / trend.length) : null;
   const openTasks = tasks.filter((t) => t.status !== "done").reduce((n, t) => n + t.n, 0);
@@ -71,6 +75,14 @@ export default async function CommandCentre({ searchParams }: { searchParams: Pr
       {isPresentation() && (
         <p className="text-xs text-muted -mt-3 mb-4">Every figure on this page is calculated from synthetic presentation records. Real figures appear only after the school authorises integration of its data.</p>
       )}
+      <div className="grid xl:grid-cols-[1.4fr_1fr] gap-5 mb-5">
+        <Briefing facts={facts} aiEnabled={aiConfigured()} title="Executive briefing" />
+        <section className="ai-card p-5">
+          <h2 className="font-display font-bold text-lg flex items-center gap-2"><Sparkles className="w-4 h-4 text-brand" aria-hidden /> Ask your data</h2>
+          <p className="text-xs text-muted mb-3">Plain-English questions, answered from the school&apos;s standard reports.</p>
+          <AskData />
+        </section>
+      </div>
       {/* Filters: one row above the charts */}
       <div className="card card-pad flex flex-wrap gap-4 items-end mb-5">
         <div>
@@ -105,10 +117,10 @@ export default async function CommandCentre({ searchParams }: { searchParams: Pr
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label={`Attendance, latest day${classId ? "" : " (all classes)"}`} value={latest ? `${latest.percent}%` : "—"} sub={latest ? `${fmtDate(latest.date)} · ${days}-day average ${avgAtt}%` : undefined} />
-        <Stat label="Enquiries needing action" value={(attention?.new_count ?? 0) + (attention?.due ?? 0)} sub={`${attention?.new_count ?? 0} new · ${attention?.due ?? 0} follow-ups due · ${attention?.escalated ?? 0} escalated`} />
-        <Stat label="Average practice-quiz score" value={overallQuiz == null ? "—" : `${overallQuiz}%`} sub={`${quizAvg.length} topics with results`} />
-        <Stat label="Hostel" value={`${hostel?.out_now ?? 0} out · ${hostel?.pending ?? 0} pending`} sub={`${hostel?.occupied ?? 0}/${hostel?.beds ?? 0} beds · ${hostel?.open_maintenance ?? 0} repairs open`} />
+        <Stat icon={<CalendarCheck />} tone="brand" label={`Attendance, latest day${classId ? "" : " (all classes)"}`} value={latest ? `${latest.percent}%` : "—"} sub={latest ? `${fmtDate(latest.date)} · ${days}-day average ${avgAtt}%` : undefined} />
+        <Stat icon={<Inbox />} tone="warn" label="Enquiries needing action" value={(attention?.new_count ?? 0) + (attention?.due ?? 0)} sub={`${attention?.new_count ?? 0} new · ${attention?.due ?? 0} follow-ups due · ${attention?.escalated ?? 0} escalated`} />
+        <Stat icon={<ClipboardCheck />} tone="good" label="Average practice-quiz score" value={overallQuiz == null ? "—" : `${overallQuiz}%`} sub={`${quizAvg.length} topics with results`} />
+        <Stat icon={<Building2 />} label="Hostel" value={`${hostel?.out_now ?? 0} out · ${hostel?.pending ?? 0} pending`} sub={`${hostel?.occupied ?? 0}/${hostel?.beds ?? 0} beds · ${hostel?.open_maintenance ?? 0} repairs open`} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5 mt-5">

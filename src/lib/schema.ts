@@ -415,4 +415,21 @@ CREATE TABLE IF NOT EXISTS audit_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at DESC);
+
+-- Report-card remarks: drafted by a teacher (optionally with AI help); families see only approved remarks.
+CREATE TABLE IF NOT EXISTS report_remarks (
+  id SERIAL PRIMARY KEY,
+  exam_id INT NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
+  student_id INT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  remark TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','approved')),
+  ai_assisted BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_by INT REFERENCES users(id) ON DELETE SET NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  seeded BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE (exam_id, student_id)
+);
+
+-- Additive upgrades for databases created before these columns existed.
+ALTER TABLE materials ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'teacher';
 `;
