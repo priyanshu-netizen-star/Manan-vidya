@@ -99,6 +99,17 @@ body {
   background: linear-gradient(135deg, #a29bfe, #00cec9);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
+.vx .vx-card { transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+.vx .vx-card-hover:hover { border-color: rgba(162, 155, 254, 0.35); transform: translateY(-3px); box-shadow: 0 18px 40px -18px rgba(108, 92, 231, 0.55); }
+.vx .vx-glass { background: rgba(20, 18, 34, 0.72); border: 1px solid rgba(255, 255, 255, 0.09); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.vx .vx-ring { background: linear-gradient(#11101c, #11101c) padding-box, linear-gradient(135deg, rgba(108,92,231,0.8), rgba(0,206,201,0.6)) border-box; border: 1px solid transparent; }
+.vx .vx-pill { display: inline-flex; align-items: center; gap: 0.4rem; border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #cfcbe6; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+.vx .vx-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #a29bfe; }
+.orb { position: absolute; border-radius: 999px; filter: blur(70px); opacity: 0.55; pointer-events: none; animation: orb-float 14s ease-in-out infinite alternate; }
+@keyframes orb-float { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(30px, -24px, 0) scale(1.08); } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.bob { animation: bob 6s ease-in-out infinite; }
+.bob-slow { animation: bob 8s ease-in-out infinite 1s; }
 .bg-grid {
   background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
   background-size: 56px 56px;

@@ -25,8 +25,10 @@ export default async function LoginPage() {
   const presentation = isPresentation();
   const usingDefaultPassword = !process.env.SEED_PASSWORD;
   return (
-    <div className="min-h-screen vx bg-grid flex flex-col">
-      <header className="max-w-6xl w-full mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <div className="min-h-screen vx bg-grid flex flex-col relative overflow-x-clip">
+      <div className="orb w-[30rem] h-[30rem] -top-40 -left-40 bg-[#6c5ce7]/35" aria-hidden />
+      <div className="orb w-[26rem] h-[26rem] bottom-0 -right-32 bg-[#00cec9]/20" style={{ animationDelay: "-5s" }} aria-hidden />
+      <header className="relative max-w-6xl w-full mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link href="/" aria-label="Back to the proposal">
           <ProductMark dark />
         </Link>
@@ -34,9 +36,14 @@ export default async function LoginPage() {
           ← Proposal overview
         </Link>
       </header>
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10 grid lg:grid-cols-[1fr_1.2fr] gap-8 items-start">
-        <section className="vx-card p-6 sm:p-8">
-          <h1 className="text-2xl font-bold font-display">Sign in</h1>
+      <main className="relative flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10 grid lg:grid-cols-[1.45fr_1fr] gap-8 items-start">
+        <div className="lg:col-span-2 max-w-3xl animate-in">
+          <p className="vx-eyebrow">VoxVision School OS</p>
+          <h1 className="mt-2 text-3xl sm:text-5xl font-bold font-display tracking-tight">Step into the school, <span className="gradient-text">as anyone.</span></h1>
+          <p className="mt-3 vx-muted">Every role has its own workspace and its own AI assistant. Pick a person to see exactly what they would see.</p>
+        </div>
+        <section className="vx-ring rounded-2xl p-6 sm:p-8 lg:order-2 animate-in">
+          <h2 className="text-2xl font-bold font-display">Sign in</h2>
           <p className="mt-1 text-sm vx-muted">Use the account your school administrator gave you.</p>
           <LoginForm />
           {presentation && usingDefaultPassword && (
@@ -46,7 +53,7 @@ export default async function LoginPage() {
           )}
         </section>
         {presentation && (
-          <section aria-labelledby="roles-h">
+          <section aria-labelledby="roles-h" className="lg:order-1 animate-in">
             <h2 id="roles-h" className="text-lg font-bold font-display">Explore by role</h2>
             <p className="text-sm vx-muted mt-1">
               One click signs you in as that person. All accounts and records are synthetic sample data created for this presentation.

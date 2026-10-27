@@ -2,7 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { ArrowRight, BedDouble, BookOpenCheck, GraduationCap, Heart, Inbox, LayoutDashboard, Presentation, Settings, type LucideIcon } from "lucide-react";
 import { api } from "@/components/forms";
+
+const ROLE_STYLE: Record<string, { icon: LucideIcon; color: string; ai: string }> = {
+  student: { icon: GraduationCap, color: "#a29bfe", ai: "AI study assistant · coding tutor" },
+  parent: { icon: Heart, color: "#fd79a8", ai: "AI Copilot · child's progress" },
+  teacher: { icon: BookOpenCheck, color: "#00cec9", ai: "AI drafts · class insights · remarks" },
+  teacher2: { icon: Presentation, color: "#55efc4", ai: "AI drafts · class insights" },
+  office: { icon: Inbox, color: "#fdcb6e", ai: "AI reply drafts · ask your data" },
+  warden: { icon: BedDouble, color: "#74b9ff", ai: "AI hostel briefing · triage" },
+  management: { icon: LayoutDashboard, color: "#e17055", ai: "Executive briefing · ask your data" },
+  admin: { icon: Settings, color: "#b2bec3", ai: "AI usage · go-live checks" },
+};
 
 export function LoginForm() {
   const router = useRouter();
@@ -49,7 +61,9 @@ export function RolePicker({ accounts }: { accounts: { key: string; name: string
   return (
     <div className="mt-4">
       <ul className="grid sm:grid-cols-2 gap-3">
-        {accounts.map((a) => (
+        {accounts.map((a) => {
+          const st = ROLE_STYLE[a.key] ?? ROLE_STYLE.admin;
+          return (
           <li key={a.key}>
             <button
               type="button"
@@ -67,14 +81,22 @@ export function RolePicker({ accounts }: { accounts: { key: string; name: string
                   setBusy(null);
                 }
               }}
-              className="w-full text-left vx-card p-4 hover:border-[#6c5ce7]/60 transition-colors disabled:opacity-60"
+              className="group w-full h-full text-left vx-card vx-card-hover p-4 flex gap-3.5 disabled:opacity-60 relative overflow-hidden"
             >
-              <span className="block text-xs font-semibold uppercase tracking-wide text-[#a29bfe]">{a.role}</span>
-              <span className="block font-semibold mt-0.5">{busy === a.key ? "Signing in…" : a.name}</span>
-              <span className="block text-xs vx-muted mt-1">{a.blurb}</span>
+              <span className="absolute inset-x-0 top-0 h-0.5 opacity-70" style={{ background: `linear-gradient(90deg, ${st.color}, transparent)` }} aria-hidden />
+              <span className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center" style={{ background: `${st.color}1f`, border: `1px solid ${st.color}40` }}>
+                <st.icon className="w-5 h-5" style={{ color: st.color }} aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[0.68rem] font-bold uppercase tracking-[0.12em]" style={{ color: st.color }}>{a.role}</span>
+                <span className="flex items-center gap-1.5 font-semibold mt-0.5">{busy === a.key ? "Signing in…" : a.name}<ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition" aria-hidden /></span>
+                <span className="block text-xs vx-muted mt-1">{a.blurb}</span>
+                <span className="mt-2 inline-flex items-center gap-1 text-[0.68rem] font-semibold text-[#c9c3ff]">✦ {st.ai}</span>
+              </span>
             </button>
           </li>
-        ))}
+          );
+        })}
       </ul>
       {error && <p role="alert" className="mt-3 text-sm text-[#ff8a8a]">{error}</p>}
     </div>

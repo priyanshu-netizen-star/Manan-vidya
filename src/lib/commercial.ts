@@ -26,7 +26,7 @@ export const MILESTONES = [
 export const EXCLUSIONS = [
   "Hardware of any kind (computers, tablets, robotics kits, sensors, networking or biometric devices).",
   "External subscriptions and hosting or database plans, unless agreed in writing.",
-  "AI / API consumption charges (for example Claude API usage), billed by the provider on actual use.",
+  "AI / API consumption charges (for example Claude or Gemini API usage), billed by the provider on actual use.",
   "SMS, WhatsApp or other messaging charges.",
   "Third-party ERP licences, vendor integration fees or vendor API access charges.",
   "Data migration from existing systems beyond what is agreed in writing.",
