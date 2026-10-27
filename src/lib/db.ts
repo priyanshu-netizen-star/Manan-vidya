@@ -38,11 +38,25 @@ async function createPg(url: string): Promise<Db> {
   const pg = await import("pg");
   const { Pool, types } = pg.default ?? pg;
   for (const [oid, fn] of Object.entries(PARSERS)) types.setTypeParser(Number(oid), fn);
+  // TLS is set explicitly rather than from the URL's sslmode, whose meaning varies between pg versions.
+  // Certificates are verified (Neon and other hosted providers use public CAs); local servers use plain TCP.
+  const conn = new URL(url);
+  const local = conn.searchParams.get("sslmode") === "disable" || /^(localhost|127\.0\.0\.1)$/.test(conn.hostname);
+  const channelBinding = conn.searchParams.get("channel_binding") === "require";
+  conn.searchParams.delete("sslmode");
+  conn.searchParams.delete("channel_binding");
   const pool = new Pool({
-    connectionString: url,
+    connectionString: conn.toString(),
     max: Number(process.env.DB_POOL_MAX || 5),
-    ssl: /sslmode=disable/.test(url) || /localhost|127\.0\.0\.1/.test(url) ? undefined : { rejectUnauthorized: false },
+    idleTimeoutMillis: 10_000,
+    enableChannelBinding: channelBinding,
+    ssl: local ? undefined : { rejectUnauthorized: process.env.DB_SSL_NO_VERIFY !== "true" },
   });
+  if (process.env.VERCEL) {
+    // Vercel Fluid compute: close idle connections before the instance is suspended.
+    const { attachDatabasePool } = await import("@vercel/functions");
+    attachDatabasePool(pool);
+  }
   const query = async <T,>(sql: string, params: unknown[] = []) => (await pool.query(sql, params)).rows as T[];
   return {
     driver: "pg",

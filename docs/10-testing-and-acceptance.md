@@ -55,6 +55,23 @@ Problems this check found and fixed:
 
 Google's free tier was sometimes busy: some models returned "busy" (503), and one request took almost 5 minutes. The code retries and then moves to the models in `GEMINI_FALLBACK_MODELS`; if all fail, users see the non-AI fallback with an honest message.
 
+### Hosted deployment check: Vercel + Neon (27 October 2026)
+
+Against `https://manan-vidya.vercel.app/mananvidyademo` with Neon Postgres:
+- **Database: 17 passed, 0 failed.**
+  - All 8 sample accounts sign in and open their dashboard (about 0.3 s per page).
+  - An enquiry is written, tracked and seen by the office.
+  - A task is created and read back.
+  - The System page reports hosted PostgreSQL.
+  - Sign-out deletes the session.
+- **Live AI (Gemini): 10 passed, 0 failed.**
+- **Security spot checks:**
+  - security headers present
+  - `.env` files and internal documents return 404
+  - source maps are not served (403)
+  - a request from a foreign origin is refused (403)
+- **Reset:** the presentation data was reset afterwards in about 27 seconds.
+
 ## 3. What the end-to-end tests verify (selected)
 
 **Subpath and routing:** every public page loads under `/mananvidyademo`; the bare subpath serves the proposal; paths outside it are not served; protected pages redirect to sign-in; deep links survive a browser refresh; internal documents are not served; security headers present; no `X-Powered-By`.

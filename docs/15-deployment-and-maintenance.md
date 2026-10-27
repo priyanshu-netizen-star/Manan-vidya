@@ -42,6 +42,7 @@ Why this design:
 | `GEMINI_FALLBACK_MODELS` | optional | `gemini-flash-lite-latest,gemini-flash-latest` | Gemini models tried in order when the main one is busy or over its limit |
 | `AI_HOURLY_LIMIT_PER_USER` | optional | `30` | AI requests per user per hour |
 | `DB_POOL_MAX` | optional | `5` | Database connection pool size |
+| `DB_SSL_NO_VERIFY` | optional | `true` only for a database with a private certificate authority | Turns off TLS certificate verification (on by default) |
 | `COOKIE_SECURE` | optional | `false` only for local HTTP testing | Session cookie `Secure` flag (on by default in production) |
 
 Never put secrets in client code, in the repository, or in documentation. Use the host's encrypted environment settings.
@@ -53,12 +54,16 @@ Never put secrets in client code, in the repository, or in documentation. Use th
 3. Set the environment variables above for *Production*.
 4. Deploy. Note the deployment origin, for example `https://voxvision-school-os.vercel.app`.
 5. Check `https://voxvision-school-os.vercel.app/mananvidyademo` loads.
-6. Initialise the database (runs automatically on first request). For production, run once from a trusted machine:
+6. Initialise the database (runs automatically on first request). For production, run once from a trusted machine, using the **direct** (non-pooled) address:
    ```bash
-   DATABASE_URL=… npm run db:migrate
+   DATABASE_URL=<direct address> npm run db:migrate
    # presentation environment only (synthetic data):
-   DATABASE_URL=… APP_ENV=presentation npm run db:seed
+   DATABASE_URL=<direct address> APP_ENV=presentation npm run db:seed
    ```
+
+**Neon notes.** Set `DATABASE_URL` in Vercel to Neon's *pooled* address (host contains `-pooler`); use the direct address (without `-pooler`) for migrations and seeding. The app uses `pg` with Vercel's `attachDatabasePool`, so idle connections close before an instance is suspended. Keep Vercel's function region close to the Neon region (Neon `us-east-2` with Vercel `iad1`): seeding from India to a US database takes minutes, while the in-app reset on Vercel takes about 30 seconds.
+
+**Current presentation deployment (27 October 2026):** Vercel project `nyay-saathis-projects/manan-vidya`, live at `https://manan-vidya.vercel.app/mananvidyademo`, database Neon (`us-east-2`), AI Google Gemini (free tier, sample data only). Deployed from the CLI; the Git repository is not yet connected.
 
 Other Node hosts: `npm ci && npm run build && npm start` (port with `-p` or `PORT`), behind HTTPS.
 
